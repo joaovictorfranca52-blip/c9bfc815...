@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Owner Panel</title><link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="row space">
+    <div class="brand">AUTHORIZED // OWNER PANEL</div>
+    <div class="toplinks"><a href="/access" target="_blank">ver página pública ↗</a></div>
+  </div>
+  <h1>PAINEL<br>SECRETO</h1>
+
+  <section id="loginBox" class="panel">
+    <h2>🔐 Autenticação</h2>
+    <p class="muted">Somente o administrador pode criar, editar ou excluir mensagens.</p>
+    <label>Senha do administrador</label>
+    <input id="loginPassword" type="password" autocomplete="current-password">
+    <div class="row" style="margin-top:12px"><button id="loginBtn">ENTRAR</button></div>
+    <div id="loginStatus" class="status"></div>
+  </section>
+
+  <section id="appBox" class="hidden">
+    <div class="panel">
+      <div class="row space"><h2>✏️ Novo arquivo secreto</h2><button class="secondary" id="logoutBtn">SAIR</button></div>
+      <div class="grid">
+        <div>
+          <label>Título</label><input id="title" placeholder="FILE_001">
+          <label>Pista</label><textarea id="clue" placeholder="Ex.: onde tudo começou..."></textarea>
+        </div>
+        <div>
+          <label>Mensagem original</label><textarea id="message" placeholder="Escreva aqui. Ela será armazenada criptografada."></textarea>
+          <label>Resposta para desbloquear</label><input id="answer" type="password" placeholder="palavra-chave">
+        </div>
+      </div>
+      <div class="row" style="margin-top:14px"><button id="saveBtn">CRIPTOGRAFAR E SALVAR</button></div>
+      <div id="saveStatus" class="status"></div>
+    </div>
+
+    <div style="height:18px"></div>
+    <div class="panel">
+      <h2>📁 Arquivos</h2>
+      <div id="messageList"></div>
+    </div>
+  </section>
+</div>
+<script>
+const $ = s => document.querySelector(s);
+async function api(url, options={}) {
+  const r = await fetch(url, {headers:{"Content-Type":"application/json"}, ...options});
+  const data = await r.json().catch(()=>({}));
+  if (!r.ok) throw new Error(data.error || "Erro");
+  return data;
+}
+async function checkAuth(){
+  const r = await api("/api/admin/me");
+  $("#loginBox").classList.toggle("hidden", r.authenticated);
+  $("#appBox").classList.toggle("hidden", !r.authenticated);
+  if(r.authenticated) loadMessages();
+}
+$("#loginBtn").onclick = async () => {
+  $("#loginStatus").textContent = "";
+  try{
+    await api("/api/admin/login",{method:"POST",body:JSON.stringify({password:$("#loginPassword").value})});
+    $("#loginPassword").value="";
+    checkAuth();
+  }catch(e){$("#loginStatus").innerHTML='<span class="error">'+e.message+'</span>'}
+};
+$("#logoutBtn").onclick = async () => { await api("/api/admin/logout",{method:"POST"}); checkAuth(); };
+$("#saveBtn").onclick = async () => {
+  $("#saveStatus").textContent="";
+  try{
+    await api("/api/admin/messages",{method:"POST",body:JSON.stringify({
+      title:$("#title").value, clue:$("#clue").value, message:$("#message").value, answer:$("#answer").value
+    })});
+    ["title","clue","message","answer"].forEach(id=>$("#"+id).value="");
+    $("#saveStatus").textContent="Arquivo salvo e criptografado.";
+    loadMessages();
+  }catch(e){$("#saveStatus").innerHTML='<span class="error">'+e.message+'</span>'}
+};
+async function loadMessages(){
+  const items = await api("/api/admin/messages");
+  const box = $("#messageList"); box.innerHTML="";
+  if(!items.length){box.innerHTML='<p class="muted">Nenhum arquivo criado ainda.</p>';return;}
+  for(const m of items){
+    const card=document.createElement("div"); card.className="card";
+    card.innerHTML=`
+      <div class="row space"><h3>${esc(m.title)}</h3><span class="muted">${new Date(m.updatedAt).toLocaleString("pt-BR")}</span></div>
+      <label>Pista</label><textarea class="e-clue">${esc(m.clue||"")}</textarea>
+      <label>Mensagem</label><textarea class="e-message">${esc(m.message||"")}</textarea>
+      <label>Nova resposta <span class="muted">(deixe em branco para manter a atual)</span></label>
+      <input class="e-answer" type="password">
+      <div class="row" style="margin-top:12px">
+        <button class="editBtn">SALVAR ALTERAÇÕES</button>
+        <button class="danger delBtn">EXCLUIR</button>
+      </div>
+      <div class="status cardStatus"></div>`;
+    card.querySelector(".editBtn").onclick=async()=>{
+      const status=card.querySelector(".cardStatus");
+      try{
+        await api("/api/admin/messages/"+m.id,{method:"PUT",body:JSON.stringify({
+          title:m.title,
+          clue:card.querySelector(".e-clue").value,
+          message:card.querySelector(".e-message").value,
+          answer:card.querySelector(".e-answer").value
+        })});
+        status.textContent="Alterações salvas.";
+        card.querySelector(".e-answer").value="";
+      }catch(e){status.innerHTML='<span class="error">'+e.message+'</span>'}
+    };
+    card.querySelector(".delBtn").onclick=async()=>{
+      if(!confirm("Excluir este arquivo?")) return;
+      await api("/api/admin/messages/"+m.id,{method:"DELETE"});
+      loadMessages();
+    };
+    box.appendChild(card);
+  }
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+checkAuth();
+</script>
+</body></html>

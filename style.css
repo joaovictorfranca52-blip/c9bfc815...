@@ -1,0 +1,57 @@
+
+:root{
+  --bg:#09040f; --panel:#13091f; --panel2:#1c0d2b; --purple:#b55cff;
+  --purple2:#7c2ae8; --text:#f4eaff; --muted:#a78eb8; --danger:#ff5c8a;
+  --ok:#7dffb2; --line:#352048;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; font-family:Consolas,Monaco,monospace;
+  color:var(--text); background:
+  radial-gradient(circle at 20% 20%,rgba(124,42,232,.2),transparent 30%),
+  radial-gradient(circle at 80% 0%,rgba(181,92,255,.12),transparent 35%),
+  var(--bg);
+}
+.wrap{max-width:1050px;margin:0 auto;padding:28px}
+.brand{font-size:14px;letter-spacing:.16em;color:var(--purple);text-transform:uppercase}
+h1{margin:8px 0 22px;font-size:clamp(30px,5vw,58px);line-height:.95}
+.panel{
+  background:linear-gradient(180deg,rgba(28,13,43,.96),rgba(14,7,23,.96));
+  border:1px solid var(--line); border-radius:18px; padding:22px;
+  box-shadow:0 20px 80px rgba(0,0,0,.35)
+}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+label{display:block;margin:13px 0 7px;color:#d8c7e6}
+input,textarea{
+  width:100%;border:1px solid var(--line);background:#0d0713;color:var(--text);
+  border-radius:10px;padding:13px;outline:none;font:inherit
+}
+textarea{min-height:120px;resize:vertical}
+input:focus,textarea:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(181,92,255,.12)}
+button{
+  border:0;border-radius:10px;padding:12px 15px;font:inherit;font-weight:700;cursor:pointer;
+  background:linear-gradient(135deg,var(--purple),var(--purple2));color:white
+}
+button.secondary{background:#241332;border:1px solid var(--line)}
+button.danger{background:#35101d;color:#ff9ab7;border:1px solid #61203a}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.space{justify-content:space-between}
+.muted{color:var(--muted);font-size:13px}
+.hidden{display:none!important}
+.card{
+  border:1px solid var(--line);background:#0d0713;border-radius:14px;padding:16px;margin-top:14px
+}
+.card h3{margin:0 0 8px;color:#eacfff}
+.status{min-height:22px;margin-top:10px;color:var(--ok)}
+.error{color:var(--danger)}
+.locked{
+  padding:12px 14px;border:1px dashed #5c3975;border-radius:10px;color:#ba9dcb;
+  background:#100817;margin:12px 0
+}
+.revealed{
+  white-space:pre-wrap;padding:14px;border-radius:10px;background:#100817;border:1px solid #3d2453;
+  color:#f9ecff;margin-top:12px
+}
+.toplinks a{color:#cfa7ff;text-decoration:none;margin-left:12px}
+.code{color:#7dffb2}
+@media(max-width:720px){.grid{grid-template-columns:1fr}.wrap{padding:18px}}

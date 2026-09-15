@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Restricted Access</title><link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">RESTRICTED // PUBLIC TERMINAL</div>
+  <h1>ACCESS<br>ARCHIVE</h1>
+  <div class="panel">
+    <div class="row space">
+      <div>
+        <h2>👁️ Arquivos disponíveis</h2>
+        <p class="muted">Você pode visualizar pistas e tentar desbloquear os arquivos. Edição desativada.</p>
+      </div>
+      <span class="code">READ_ONLY</span>
+    </div>
+    <div id="list"></div>
+  </div>
+</div>
+<script>
+const $ = s => document.querySelector(s);
+async function load(){
+  const r=await fetch("/api/public/messages");
+  const items=await r.json();
+  const box=$("#list"); box.innerHTML="";
+  if(!items.length){box.innerHTML='<p class="muted">Nenhum arquivo disponível.</p>';return;}
+  for(const m of items){
+    const card=document.createElement("div");card.className="card";
+    card.innerHTML=`
+      <h3>${esc(m.title)}</h3>
+      <div class="locked">🔒 ENCRYPTED FILE</div>
+      <p><b>PISTA:</b> ${esc(m.clue||"Nenhuma pista fornecida.")}</p>
+      <label>Chave / resposta</label>
+      <div class="row">
+        <input class="answer" type="password" placeholder="digite a resposta" style="flex:1">
+        <button class="unlock">UNLOCK</button>
+      </div>
+      <div class="status"></div>
+      <div class="revealed hidden"></div>`;
+    card.querySelector(".unlock").onclick=async()=>{
+      const status=card.querySelector(".status"), out=card.querySelector(".revealed");
+      status.textContent=""; out.classList.add("hidden"); out.textContent="";
+      const answer=card.querySelector(".answer").value;
+      const r=await fetch("/api/public/unlock/"+m.id,{
+        method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({answer})
+      });
+      const data=await r.json().catch(()=>({}));
+      if(!r.ok){status.innerHTML='<span class="error">'+esc(data.error||"ACCESS DENIED")+'</span>';return;}
+      status.textContent="ACCESS GRANTED";
+      out.textContent=data.message; out.classList.remove("hidden");
+    };
+    box.appendChild(card);
+  }
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+load();
+</script>
+</body></html>
