@@ -16,7 +16,7 @@ const DATA_FILE = path.join(__dirname, "data", "messages.json");
 
 app.use(express.json({ limit: "200kb" }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(__dirname));
 
 function loadEnv() {
   const envPath = path.join(__dirname, ".env");
@@ -126,8 +126,8 @@ function requireAdmin(req, res, next) {
 }
 
 app.get("/", (req, res) => res.redirect("/access.html"));
-app.get("/access", (req, res) => res.sendFile(path.join(__dirname, "public", "access.html")));
-app.get("/admin", (req, res) => res.sendFile(path.join(__dirname, "public", "admin.html")));
+app.get("/access", (req, res) => res.sendFile(path.join(__dirname, "access.html")));
+app.get("/admin", (req, res) => res.sendFile(path.join(__dirname, "admin.html")));
 
 app.post("/api/admin/login", (req, res) => {
   const password = String(req.body?.password || "");
